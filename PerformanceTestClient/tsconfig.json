@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "noImplicitUseStrict": true,
+    "module": "commonjs",
+    "target": "es5",
+    "sourceMap": false,
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "moduleResolution": "node"
+  },
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
