@@ -11,8 +11,12 @@ namespace PerformanceTestServer.Data.Models
         [Key]
         public int Id { get; set; }
 
+        public DateTime CreatedOnClient { get; set; }
+        
+        [NonCreatable]
         public DateTime CreatedOn { get; set; }
 
+        [NonCreatable]
         public DateTime UpdatedOn { get; set; }
 
         private void OnCreate()
