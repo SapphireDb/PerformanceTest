@@ -10,12 +10,10 @@ namespace PerformanceTestDataServer.Data.Models
 
         public Guid ClientId { get; set; }
         
-        public double AverageDiffFromServer { get; set; }
+        public double AverageServerDiff { get; set; }
 
-        public double AverageDiffFromClient { get; set; }
+        public double AverageClientDiff { get; set; }
 
-        public DateTime StartTime { get; set; }
-
-        public DateTime EndTime { get; set; }
+        public DateTime Time { get; set; }
     }
 }

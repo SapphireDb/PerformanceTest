@@ -1,27 +1,38 @@
 import * as ws from 'ws';
-WebSocket = ws;
 import {DefaultCollection, SapphireDb} from 'sapphiredb';
 import {switchMap, take} from 'rxjs/operators';
-import {of, timer} from 'rxjs';
+import {of} from 'rxjs';
+import {entryCount, perfServerUrl, useSsl} from './consts';
+
+WebSocket = ws;
 
 const db = new SapphireDb({
-    serverBaseUrl: 'sapphire-perf-server.azurewebsites.net',
-    useSsl: true
+    serverBaseUrl: perfServerUrl,
+    useSsl: useSsl
 });
 
 const collection: DefaultCollection<any> = db.collection('entries');
 
-timer(0, 200).pipe(
-    switchMap(() => collection.values().pipe(take(1))),
-    switchMap(v => {
-        if (v.length > 0) {
-            console.log(`Removing ${v.length} entries`);
-            return collection.remove(...v);
-        }
+const runFunction = () => {
+    collection.values().pipe(
+        take(1),
+        switchMap(v => {
+            if (v.length > 0) {
+                console.log(`Removing ${v.length} entries`);
+                return collection.remove(...v);
+            }
 
-        return of(null);
-    })
-).subscribe(() => {
-    console.log('Added entry');
-    collection.add({ createdOnClient: new Date() });
-});
+            return of(null);
+        })
+    ).subscribe(() => {
+        const newData = new Array(entryCount).fill(null).map(() => ({ createdOnClient: new Date() }));
+        collection.add(...newData).subscribe(() => {
+            console.log(`Added ${newData.length} entries`);
+            setTimeout(() => {
+                runFunction();
+            }, 2000);
+        });
+    });
+};
+
+runFunction();

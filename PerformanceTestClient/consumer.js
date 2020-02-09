@@ -1,34 +1,48 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ws = require("ws");
-WebSocket = ws;
+require("linq4js");
 var sapphiredb_1 = require("sapphiredb");
 var operators_1 = require("rxjs/operators");
 var moment = require("moment");
 var axios_1 = require("axios");
 var uuid = require("uuid/v4");
+var consts_1 = require("./consts");
+WebSocket = ws;
 var clientId = uuid();
 var db = new sapphiredb_1.SapphireDb({
-    serverBaseUrl: 'sapphire-perf-server.azurewebsites.net',
-    useSsl: true
+    serverBaseUrl: consts_1.perfServerUrl,
+    useSsl: consts_1.useSsl
 });
 var collection = db.collection('entries');
 var data = [];
-collection.values().pipe(operators_1.filter(function (v) { return v.length === 1; }), operators_1.skip(1), operators_1.map(function (v) { return v[0]; })).subscribe(function (newValue) {
+collection.values().pipe(operators_1.filter(function (v) { return v.length === consts_1.entryCount; }), operators_1.skip(1)).subscribe(function (newValues) {
     var currentDate = moment();
-    var createdDateServer = moment(newValue.createdOn);
-    var diffFromServer = currentDate.diff(createdDateServer, 'milliseconds');
-    var createdDateClient = moment(newValue.createdOnClient);
-    var diffFromClient = currentDate.diff(createdDateClient, 'milliseconds');
+    newValues = newValues.map(function (v) {
+        v['createdOn'] = moment(v.createdOn);
+        v['createdOnClient'] = moment(v.createdOnClient);
+        v['diffFromServer'] = currentDate.diff(v.createdOn, 'milliseconds');
+        v['diffFromClient'] = currentDate.diff(v.createdOnClient, 'milliseconds');
+        return v;
+    });
+    var averageServerDiff = newValues.Average(function (v) { return v.diffFromServer; });
+    var averageClientDiff = newValues.Average(function (v) { return v.diffFromClient; });
+    console.log("Id: " + clientId + "; Average server diff: " + averageServerDiff + "; Average client diff: " + averageClientDiff);
     data.push({
         clientId: clientId,
-        diffFromServer: diffFromServer,
-        diffFromClient: diffFromClient,
+        averageServerDiff: averageServerDiff,
+        averageClientDiff: averageClientDiff,
         receivedOn: currentDate
     });
     if (data.length >= 100) {
-        console.log('sending data to server');
-        axios_1.default.post('https://sapphire-perf-data-server.azurewebsites.net/data/postData', data);
+        var dataToSend_1 = data.slice(0);
+        var sendData_1 = function () {
+            axios_1.default.post(consts_1.perfDataServerUrl + "/data/postData", dataToSend_1).catch(function () {
+                sendData_1();
+            }).then(function () {
+                console.log("Id: " + clientId + "; Sent data to server");
+            });
+        };
+        sendData_1();
         data = [];
     }
-    console.log('server diff', diffFromServer, 'client diff', diffFromClient);
 });

@@ -7,9 +7,9 @@ namespace PerformanceTestDataServer.Dto
     {
         public Guid ClientId { get; set; }
         
-        public int DiffFromServer { get; set; }
+        public double AverageServerDiff { get; set; }
 
-        public int DiffFromClient { get; set; }
+        public double AverageClientDiff { get; set; }
 
         public DateTime ReceivedOn { get; set; }
     }

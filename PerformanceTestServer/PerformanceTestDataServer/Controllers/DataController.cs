@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using PerformanceTestDataServer.Data;
 using PerformanceTestDataServer.Data.Models;
 using PerformanceTestDataServer.Dto;
+using PerformanceTestDataServer.Helper;
 
 namespace PerformanceTestDataServer.Controllers
 {
@@ -21,19 +23,22 @@ namespace PerformanceTestDataServer.Controllers
         public void PostData([FromBody] List<EntryDto> entries)
         {
             Guid clientId = entries.FirstOrDefault()?.ClientId ?? Guid.Empty;
-            DateTime startTime = entries.Min(e => e.ReceivedOn);
-            DateTime endTime = entries.Max(e => e.ReceivedOn);
-            double averageServerDiff = entries.Average(e => e.DiffFromServer);
-            double averageClientDiff = entries.Average(e => e.DiffFromClient);
 
-            _db.Entries.Add(new Entry()
+            IEnumerable<IGrouping<DateTime, EntryDto>> groupedByTime = entries.GroupBy(e => e.ReceivedOn.Round(TimeSpan.FromSeconds(1)));
+
+            foreach (IGrouping<DateTime,EntryDto> timeGrouping in groupedByTime)
             {
-                ClientId = clientId,
-                StartTime = startTime,
-                EndTime = endTime,
-                AverageDiffFromClient = averageClientDiff,
-                AverageDiffFromServer = averageServerDiff
-            });
+                double averageServerDiff = timeGrouping.Average(e => e.AverageServerDiff);
+                double averageClientDiff = timeGrouping.Average(e => e.AverageClientDiff);
+                _db.Entries.Add(new Entry()
+                {
+                    ClientId = clientId,
+                    AverageClientDiff = averageClientDiff,
+                    AverageServerDiff = averageServerDiff,
+                    Time = timeGrouping.Key
+                });    
+            }
+            
             _db.SaveChanges();
         }
     }
