@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FileContextCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using PerformanceTestDataServer.Data;
 
 namespace PerformanceTestDataServer
@@ -16,7 +10,7 @@ namespace PerformanceTestDataServer
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<Db>(cfg => cfg.UseFileContextDatabase(serializer: "csv"));
+            services.AddDbContext<Db>(cfg => cfg.UseInMemoryDatabase("data"));
             services.AddMvc(cfg => { cfg.EnableEndpointRouting = false; });
         }
         

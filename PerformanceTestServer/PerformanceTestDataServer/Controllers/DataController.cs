@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using PerformanceTestDataServer.Data;
 using PerformanceTestDataServer.Data.Models;
@@ -40,6 +45,16 @@ namespace PerformanceTestDataServer.Controllers
             }
             
             _db.SaveChanges();
+        }
+
+        [HttpGet]
+        public string GetData()
+        {
+            using StringWriter writer = new StringWriter();
+            using CsvWriter csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+            csv.WriteRecords(_db.Entries.ToList());
+            csv.Flush();
+            return writer.ToString();
         }
     }
 }
