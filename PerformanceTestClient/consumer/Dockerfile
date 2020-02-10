@@ -6,6 +6,4 @@ COPY . .
 
 RUN npm install
 
-#CMD node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js
-#CMD node consumer.js & node consumer.js & node consumer.js & node consumer.js & node consumer.js
 CMD node consumer.js
