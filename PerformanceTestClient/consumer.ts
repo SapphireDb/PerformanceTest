@@ -33,31 +33,37 @@ collection.values().pipe(
        return v;
     });
 
-    const averageServerDiff = newValues.Average(v => v.diffFromServer);
+    // const averageServerDiff = newValues.Average(v => v.diffFromServer);
     const averageClientDiff = newValues.Average(v => v.diffFromClient);
 
-    console.log(`Id: ${clientId}; Average server diff: ${averageServerDiff}; Average client diff: ${averageClientDiff}`);
+    // console.log(`Id: ${clientId}; Average server diff: ${averageServerDiff}; Average client diff: ${averageClientDiff}`);
 
-    data.push({
-        clientId: clientId,
-        averageServerDiff: averageServerDiff,
-        averageClientDiff: averageClientDiff,
-        receivedOn: currentDate
+    db.execute<number>('date', 'GetServerDiff', newValues[0].createdOn).subscribe((diffResult) => {
+        const serverDiff = diffResult.result;
+
+        console.log(`Id: ${clientId}; Average server diff: ${serverDiff}; Average client diff: ${averageClientDiff}`);
+
+        data.push({
+            clientId: clientId,
+            averageServerDiff: serverDiff,
+            averageClientDiff: averageClientDiff,
+            receivedOn: currentDate
+        });
+
+        if (data.length >= 100) {
+            const dataToSend = data.slice(0);
+
+            const sendData = () => {
+                axios.post(`${perfDataServerUrl}/data/postData`, dataToSend).catch(() => {
+                    sendData();
+                }).then(() => {
+                    console.log(`Id: ${clientId}; Sent data to server`);
+                });
+            };
+
+            sendData();
+
+            data = [];
+        }
     });
-
-    if (data.length >= 100) {
-        const dataToSend = data.slice(0);
-
-        const sendData = () => {
-            axios.post(`${perfDataServerUrl}/data/postData`, dataToSend).catch(() => {
-                sendData();
-            }).then(() => {
-                console.log(`Id: ${clientId}; Sent data to server`);
-            });
-        };
-
-        sendData();
-
-        data = [];
-    }
 });

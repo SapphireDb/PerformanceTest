@@ -24,25 +24,29 @@ collection.values().pipe(operators_1.filter(function (v) { return v.length === c
         v['diffFromClient'] = currentDate.diff(v.createdOnClient, 'milliseconds');
         return v;
     });
-    var averageServerDiff = newValues.Average(function (v) { return v.diffFromServer; });
+    // const averageServerDiff = newValues.Average(v => v.diffFromServer);
     var averageClientDiff = newValues.Average(function (v) { return v.diffFromClient; });
-    console.log("Id: " + clientId + "; Average server diff: " + averageServerDiff + "; Average client diff: " + averageClientDiff);
-    data.push({
-        clientId: clientId,
-        averageServerDiff: averageServerDiff,
-        averageClientDiff: averageClientDiff,
-        receivedOn: currentDate
+    // console.log(`Id: ${clientId}; Average server diff: ${averageServerDiff}; Average client diff: ${averageClientDiff}`);
+    db.execute('date', 'GetServerDiff', newValues[0].createdOn).subscribe(function (diffResult) {
+        var serverDiff = diffResult.result;
+        console.log("Id: " + clientId + "; Average server diff: " + serverDiff + "; Average client diff: " + averageClientDiff);
+        data.push({
+            clientId: clientId,
+            averageServerDiff: serverDiff,
+            averageClientDiff: averageClientDiff,
+            receivedOn: currentDate
+        });
+        if (data.length >= 100) {
+            var dataToSend_1 = data.slice(0);
+            var sendData_1 = function () {
+                axios_1.default.post(consts_1.perfDataServerUrl + "/data/postData", dataToSend_1).catch(function () {
+                    sendData_1();
+                }).then(function () {
+                    console.log("Id: " + clientId + "; Sent data to server");
+                });
+            };
+            sendData_1();
+            data = [];
+        }
     });
-    if (data.length >= 100) {
-        var dataToSend_1 = data.slice(0);
-        var sendData_1 = function () {
-            axios_1.default.post(consts_1.perfDataServerUrl + "/data/postData", dataToSend_1).catch(function () {
-                sendData_1();
-            }).then(function () {
-                console.log("Id: " + clientId + "; Sent data to server");
-            });
-        };
-        sendData_1();
-        data = [];
-    }
 });
