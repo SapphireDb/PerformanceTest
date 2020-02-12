@@ -1,18 +1,16 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace PerformanceTestDataServer.Data.Models
+namespace PerformanceTestServer.Data.Models
 {
-    public class Entry
+    public class DataEntry
     {
         [Key]
         public int Id { get; set; }
 
         public Guid ClientId { get; set; }
         
-        public double AverageServerDiff { get; set; }
-
-        public double AverageClientDiff { get; set; }
+        public double AverageDiff { get; set; }
 
         public DateTime Time { get; set; }
     }

@@ -6,9 +6,8 @@
   "scripts": {
     "compile": "tsc --project tsconfig.json",
     "start_consumer": "node consumer.js",
-    "start_producer": "node producer.js",
-    "create_images": "docker build -t morrisj/sapphiredb-perf-test-consumer . -f consumer/Dockerfile && docker build -t morrisj/sapphiredb-perf-test-producer . -f producer/Dockerfile",
-    "publish_images": "docker push morrisj/sapphiredb-perf-test-consumer && docker push morrisj/sapphiredb-perf-test-producer"
+    "create_images": "docker build -t morrisj/sapphiredb-perf-test-consumer .",
+    "publish_images": "docker push morrisj/sapphiredb-perf-test-consumer"
   },
   "keywords": [],
   "author": "",

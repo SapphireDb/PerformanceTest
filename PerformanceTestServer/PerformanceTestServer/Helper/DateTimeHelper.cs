@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PerformanceTestDataServer.Helper
+namespace PerformanceTestServer.Helper
 {
     public static class DateTimeHelper
     {
