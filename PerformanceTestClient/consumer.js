@@ -50,24 +50,42 @@ var db = new sapphiredb_1.SapphireDb({
     useSsl: consts_1.useSsl
 });
 var init = function () { return __awaiter(_this, void 0, void 0, function () {
-    var collection, data;
+    var collection, data, createData;
     return __generator(this, function (_a) {
-        collection = db.collection('entries');
+        collection = db.collection('entries')
+            .where(['clientId', '==', clientId]);
         data = [];
         collection.values().pipe(operators_1.filter(function (v) { return v.length === 1; }), operators_1.skip(1)).subscribe(function (newValues) {
-            var currentTime = moment().utc(false);
-            var newValueCreatedOn = moment.utc(newValues[0].createdOn);
+            var receivedOn = moment();
+            var createdOn = moment(newValues[0].createdOn);
             data.push({
-                createdOn: newValueCreatedOn,
-                receivedOn: currentTime
+                createdOn: createdOn,
+                receivedOn: receivedOn
             });
-            console.log("Id: " + clientId + "; Received data with diff of " + currentTime.diff(newValueCreatedOn, 'milliseconds') + " ms");
-            if (data.length >= 10) {
+            console.log("Id: " + clientId + "; Diff: " + receivedOn.diff(createdOn, 'milliseconds') + " ms");
+            if (data.length >= 100) {
                 var dataToSend = data.slice(0);
                 data = [];
-                db.execute('data', 'send', dataToSend, clientId);
+                db.execute('data', 'send', dataToSend, clientId, moment());
+                console.log("Id: " + clientId + "; Storing data in db");
             }
         });
+        createData = function () {
+            collection.values().pipe(operators_1.take(1)).subscribe(function (values) {
+                collection.remove.apply(collection, values).subscribe(function () {
+                    collection.add({
+                        clientId: clientId,
+                        createdOn: moment()
+                    }).subscribe(function () {
+                        console.log("Id: " + clientId + "; Created entry");
+                        setTimeout(function () {
+                            createData();
+                        }, 2000);
+                    });
+                });
+            });
+        };
+        createData();
         return [2 /*return*/];
     });
 }); };

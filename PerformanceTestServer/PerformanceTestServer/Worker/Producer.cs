@@ -17,17 +17,17 @@ namespace PerformanceTestServer.Worker
 
         public void Init()
         {
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    Db db = _serviceProvider.CreateScope().ServiceProvider.GetService<Db>();
-                    db.Entries.RemoveRange(db.Entries);
-                    db.Entries.Add(new Entry());
-                    await db.SaveChangesAsync();
-                    await Task.Delay(2000);
-                }
-            });
+            // Task.Run(async () =>
+            // {
+            //     while (true)
+            //     {
+            //         Db db = _serviceProvider.CreateScope().ServiceProvider.GetService<Db>();
+            //         db.Entries.RemoveRange(db.Entries);
+            //         db.Entries.Add(new Entry());
+            //         await db.SaveChangesAsync();
+            //         await Task.Delay(2000);
+            //     }
+            // });
         }
     }
 }

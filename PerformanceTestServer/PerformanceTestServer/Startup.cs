@@ -16,14 +16,15 @@ namespace PerformanceTestServer
             
             services.AddMvc(cfg => { cfg.EnableEndpointRouting = false; });
             
-            services.AddDbContext<DataDb>(cfg => cfg.UseInMemoryDatabase("data_db"));
+            services.AddDbContext<DataDb>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=sapphiredb_perf-test;"));
             
             services.AddSapphireDb()
                 .AddContext<Db>(cfg => cfg.UseInMemoryDatabase("db"));
         }
         
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Producer producer)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Producer producer, DataDb db)
         {
+            db.Database.EnsureCreated();
             producer.Init();
             
             app.UseCors(c => c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());

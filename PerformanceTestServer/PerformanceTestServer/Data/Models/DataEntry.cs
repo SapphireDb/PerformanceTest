@@ -6,7 +6,7 @@ namespace PerformanceTestServer.Data.Models
     public class DataEntry
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public Guid ClientId { get; set; }
         

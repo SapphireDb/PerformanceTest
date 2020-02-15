@@ -1,7 +1,7 @@
 import * as ws from 'ws';
 import 'linq4js';
 import {ActionResult, DefaultCollection, SapphireDb} from 'sapphiredb';
-import {filter, skip} from 'rxjs/operators';
+import {filter, skip, take} from 'rxjs/operators';
 import * as moment from 'moment';
 import * as uuid from 'uuid/v4';
 import {perfServerUrl, useSsl} from './consts';
@@ -16,7 +16,8 @@ const db = new SapphireDb({
 });
 
 const init = async () => {
-    const collection: DefaultCollection<any> = db.collection('entries');
+    const collection: DefaultCollection<any> = db.collection('entries')
+        .where(['clientId', '==', clientId]);
 
     let data = [];
 
@@ -24,23 +25,42 @@ const init = async () => {
         filter(v => v.length === 1),
         skip(1)
     ).subscribe((newValues) => {
-        const currentTime = moment().utc(false);
-        const newValueCreatedOn = moment.utc(newValues[0].createdOn);
+        const receivedOn = moment();
+        const createdOn = moment(newValues[0].createdOn);
 
         data.push({
-            createdOn: newValueCreatedOn,
-            receivedOn: currentTime
+            createdOn: createdOn,
+            receivedOn: receivedOn
         });
 
-        console.log(`Id: ${clientId}; Received data with diff of ${currentTime.diff(newValueCreatedOn, 'milliseconds')} ms`);
+        console.log(`Id: ${clientId}; Diff: ${receivedOn.diff(createdOn, 'milliseconds')} ms`);
 
-        if (data.length >= 10) {
+        if (data.length >= 100) {
             const dataToSend = data.slice(0);
             data = [];
 
-            db.execute('data', 'send', dataToSend, clientId);
+            db.execute('data', 'send', dataToSend, clientId, moment());
+            console.log(`Id: ${clientId}; Storing data in db`);
         }
     });
+
+    const createData = () => {
+        collection.values().pipe(take(1)).subscribe((values) => {
+            collection.remove(...values).subscribe(() => {
+                collection.add({
+                    clientId: clientId,
+                    createdOn: moment()
+                }).subscribe(() => {
+                    console.log(`Id: ${clientId}; Created entry`);
+                    setTimeout(() => {
+                        createData();
+                    }, 2000);
+                });
+            });
+        });
+    };
+
+    createData();
 };
 
 init();

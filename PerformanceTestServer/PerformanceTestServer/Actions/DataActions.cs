@@ -18,12 +18,22 @@ namespace PerformanceTestServer.Actions
             _db = db;
         }
 
-        public void Send(List<DataEntryDto> entries, string clientIdString)
+        public void Send(List<DataEntryDto> entries, string clientIdString, DateTime clientTime)
         {
+            DateTime serverTime = DateTime.UtcNow;
+            double serverTimeDiff = (clientTime - serverTime).TotalMilliseconds;
+
             Guid clientId = Guid.Parse(clientIdString);
-            
-            IEnumerable<IGrouping<DateTime, DataEntryDto>> groupedByTime = entries.GroupBy(e => e.ReceivedOn.Round(TimeSpan.FromSeconds(1)));
-            
+
+            IEnumerable<IGrouping<DateTime, DataEntryDto>> groupedByTime = entries
+                .Select(e =>
+                {
+                    e.CreatedOn = e.CreatedOn.AddMilliseconds(serverTimeDiff);
+                    e.ReceivedOn = e.ReceivedOn.AddMilliseconds(serverTimeDiff);
+                    return e;
+                })
+                .GroupBy(e => e.ReceivedOn.Round(TimeSpan.FromSeconds(1)));
+
             foreach (IGrouping<DateTime, DataEntryDto> timeGrouping in groupedByTime)
             {
                 double averageDiff = timeGrouping.Average(e => (e.ReceivedOn - e.CreatedOn).TotalMilliseconds);
@@ -32,9 +42,9 @@ namespace PerformanceTestServer.Actions
                     ClientId = clientId,
                     AverageDiff = averageDiff,
                     Time = timeGrouping.Key
-                });    
+                });
             }
-            
+
             _db.SaveChanges();
         }
     }
