@@ -1,5 +1,8 @@
 // export const perfServerUrl = 'sapphiredb-load-test.azurewebsites.net';
 // export const useSsl = true;
 
-export const perfServerUrl = '192.168.0.67:5000';
+// export const perfServerUrl = '192.168.0.67:5000';
+// export const useSsl = false;
+
+export const perfServerUrl = '192.168.0.206:5000';
 export const useSsl = false;

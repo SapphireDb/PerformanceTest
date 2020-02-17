@@ -18,11 +18,11 @@ namespace PerformanceTestServer
             services.AddSingleton<Producer>();
             services.AddSingleton<DatabaseStorageWorker>();
 
-            // services.AddDbContext<DataDb>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=sapphiredb_perf-test;"));
+            services.AddDbContext<DataDb>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=192.168.0.67;Port=5432;Database=sapphiredb_perf-test;"));
             // services.AddDbContext<DataDb>(cfg => cfg.UseInMemoryDatabase("test"));
-            services.AddDbContext<DataDb>(cfg =>
-                cfg.UseMySql(
-                    "Server=sapphiredb-loadtest-resulsts.mysql.database.azure.com; Port=3306; Database=results; Uid=sapphiredb@sapphiredb-loadtest-resulsts; Pwd=Pw123456; SslMode=Preferred;"));
+            // services.AddDbContext<DataDb>(cfg =>
+            //     cfg.UseMySql(
+            //         "Server=sapphiredb-loadtest-resulsts.mysql.database.azure.com; Port=3306; Database=results; Uid=sapphiredb@sapphiredb-loadtest-resulsts; Pwd=Pw123456; SslMode=Preferred;"));
 
             services.AddSapphireDb();
         }
