@@ -16,7 +16,7 @@ const db = new SapphireDb({
 const init = async () => {
     db.messaging.messages().subscribe(message => {
         console.log(`Id: ${clientId}; Received message`);
-        db.execute('message', 'received', message, clientId);
+        db.execute('message.received', message, clientId);
     });
 };
 

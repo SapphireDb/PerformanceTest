@@ -51,7 +51,7 @@ var init = function () { return __awaiter(_this, void 0, void 0, function () {
     return __generator(this, function (_a) {
         db.messaging.messages().subscribe(function (message) {
             console.log("Id: " + clientId + "; Received message");
-            db.execute('message', 'received', message, clientId);
+            db.execute('message.received', message, clientId);
         });
         return [2 /*return*/];
     });
