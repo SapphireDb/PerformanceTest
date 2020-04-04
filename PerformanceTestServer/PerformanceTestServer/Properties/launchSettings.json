@@ -22,6 +22,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "PerformanceTestServerRelease": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://*:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Release"
+      }
     }
   }
 }

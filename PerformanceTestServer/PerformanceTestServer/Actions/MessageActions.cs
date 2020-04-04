@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using PerformanceTestServer.Data.Models;
 using PerformanceTestServer.Worker;
 using SapphireDb.Actions;
@@ -14,18 +15,28 @@ namespace PerformanceTestServer.Actions
             _storageWorker = storageWorker;
         }
         
-        public void Received(DateTime messageTime, string clientIdRaw)
+        public void Received(Guid clientId, DateTime clientTime, List<LastEntryDto> lastEntries)
         {
             DateTime now = DateTime.UtcNow;
-            Guid clientId = Guid.Parse(clientIdRaw);
+            TimeSpan clientTimeDiff = now - clientTime;
 
-            DataEntry entry = new DataEntry()
+            foreach (LastEntryDto lastEntry in lastEntries)
             {
-                ClientId = clientId,
-                AverageDiff = (now - messageTime).TotalMilliseconds,
-                Time = messageTime
-            };
-            _storageWorker.Store(entry);
+                DataEntry entry = new DataEntry()
+                {
+                    ClientId = clientId,
+                    AverageDiff = lastEntry.Diff,
+                    Time = lastEntry.Time + clientTimeDiff
+                };
+                _storageWorker.Store(entry);
+            }
         }
+    }
+
+    public class LastEntryDto
+    {
+        public DateTime Time { get; set; }
+
+        public double Diff { get; set; }
     }
 }

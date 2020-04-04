@@ -41,18 +41,49 @@ require("linq4js");
 var sapphiredb_1 = require("sapphiredb");
 var uuid = require("uuid/v4");
 var consts_1 = require("./consts");
+var operators_1 = require("rxjs/operators");
+var rxjs_1 = require("rxjs");
 WebSocket = ws;
 var clientId = uuid();
 var db = new sapphiredb_1.SapphireDb({
     serverBaseUrl: consts_1.perfServerUrl,
     useSsl: consts_1.useSsl
 });
+var collection;
+var startTime;
+var lastEntries = [];
+var createEntry = function () {
+    collection.values().pipe(operators_1.filter(function (v) { return v.length > 0; }), operators_1.take(1)).subscribe(function (v) {
+        var _a = process.hrtime(startTime), endTimeS = _a[0], endTimeNs = _a[1];
+        var diff = (endTimeS * 1000000000 + endTimeNs) / 1000000;
+        console.log("Id: " + clientId + "; Diff: " + diff + " ms");
+        lastEntries.push({ time: new Date(), diff: diff });
+        collection.remove.apply(collection, v).pipe(operators_1.catchError(function () { return rxjs_1.of(null); })).subscribe(function () {
+            if (lastEntries.length >= consts_1.entriesCount) {
+                console.log("Id: " + clientId + "; Sending data to server");
+                db.execute('message.received', clientId, new Date(), lastEntries).subscribe(function () {
+                    lastEntries = [];
+                    setTimeout(function () {
+                        createEntry();
+                    }, 2000);
+                });
+            }
+            else {
+                setTimeout(function () {
+                    createEntry();
+                }, 2000);
+            }
+        });
+    });
+    startTime = process.hrtime();
+    collection.add({
+        clientId: clientId
+    });
+};
 var init = function () { return __awaiter(_this, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        db.messaging.messages().subscribe(function (message) {
-            console.log("Id: " + clientId + "; Received message");
-            db.execute('message.received', message, clientId);
-        });
+        collection = db.collection('entries').where(['clientId', '==', clientId]);
+        createEntry();
         return [2 /*return*/];
     });
 }); };
