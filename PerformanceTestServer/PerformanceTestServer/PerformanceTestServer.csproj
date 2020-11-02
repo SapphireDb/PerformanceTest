@@ -8,7 +8,7 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.3" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.3" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.1" />
-      <PackageReference Include="SapphireDb" Version="2.1.3" />
+      <PackageReference Include="SapphireDb" Version="3.1.5-alpha" />
     </ItemGroup>
 
 </Project>

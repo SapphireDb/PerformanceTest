@@ -22,7 +22,8 @@ namespace PerformanceTestServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
-            
+
+            services.AddSingleton<Producer>();
             services.AddSingleton<DatabaseStorageWorker>();
 
             string dbConnectionString = _configuration.GetValue<string>("Database");
@@ -32,9 +33,10 @@ namespace PerformanceTestServer
                 .AddContext<BenchmarkDb>(cfg => cfg.UseInMemoryDatabase("benchmark"));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataDb db)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataDb db, Producer producer)
         {
             db.Database.EnsureCreated();
+            producer.Init();
 
             app.UseCors(c => c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 

@@ -6,4 +6,4 @@ COPY . .
 
 RUN npm install
 
-CMD node consumer.js
+CMD start_consumers.sh

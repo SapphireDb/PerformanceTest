@@ -3,8 +3,7 @@ import 'linq4js';
 import {DefaultCollection, SapphireDb} from 'sapphiredb';
 import * as uuid from 'uuid/v4';
 import {entriesCount, perfServerUrl, useSsl} from './consts';
-import {catchError, filter, skip, take} from 'rxjs/operators';
-import {of} from 'rxjs';
+import {filter, map, skip, takeUntil} from 'rxjs/operators';
 
 WebSocket = ws;
 
@@ -15,53 +14,34 @@ const db = new SapphireDb({
     useSsl: useSsl
 });
 
-let collection: DefaultCollection<any>;
+let measurementEntries: { time: Date, received: Date }[] = [];
 
-let startTime: [ number, number];
+const collection: DefaultCollection<any> = db.collection('entries');
+const values$ = collection.values();
 
-let lastEntries: { time: Date, diff: number }[] = [];
+const startListening = () => {
+    values$.pipe(
+        takeUntil(db.online().pipe(skip(1), filter(v => !v))),
+        filter(v => v.length === 1),
+        skip(2),
+        map(v => v[0])
+    ).subscribe({
+        next: value => {
+            measurementEntries.push({time: value.time, received: new Date()});
+            console.log(`Id: ${clientId}; Received entry from ${value.time}`);
 
-const createEntry = () => {
-    collection.values().pipe(filter(v => v.length > 0), take(1)).subscribe(v => {
-        const [ endTimeS, endTimeNs ] = process.hrtime(startTime);
-        const diff = (endTimeS * 1000000000 + endTimeNs) / 1000000;
-
-        console.log(`Id: ${clientId}; Diff: ${diff} ms`);
-
-        lastEntries.push({ time: new Date(), diff: diff });
-
-        collection.remove(...v).pipe(catchError(() => of(null))).subscribe(() => {
-            if (lastEntries.length >= entriesCount) {
-                console.log(`Id: ${clientId}; Sending data to server`);
-                db.execute('message.received', clientId, new Date(), lastEntries).subscribe(() => {
-                    lastEntries = [];
-                    setTimeout(() => {
-                        createEntry();
-                    }, 2000);
+            if (measurementEntries.length >= entriesCount) {
+                console.log(`Id: ${clientId}; Sending measurements to server`);
+                db.execute('store.measurements', clientId, new Date(), measurementEntries).subscribe(() => {
+                    console.log(`Id: ${clientId}; Measurements stored`);
+                    measurementEntries = [];
                 });
-            } else {
-                setTimeout(() => {
-                    createEntry();
-                }, 2000);
             }
-        });
+        },
+        complete: () => startListening()
     });
 
-    startTime = process.hrtime();
-
-    collection.add({
-        clientId: clientId
-    });
+    console.log(`Id: ${clientId}; Started listening`);
 };
 
-const init = async () => {
-    collection = db.collection('entries').where(['clientId', '==', clientId]);
-
-    createEntry();
-    // db.messaging.messages().subscribe(message => {
-    //     console.log(`Id: ${clientId}; Received message`);
-    //     db.execute('message.received', message, clientId);
-    // });
-};
-
-init();
+startListening();
